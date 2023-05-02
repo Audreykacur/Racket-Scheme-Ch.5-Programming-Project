@@ -1,0 +1,167 @@
+#lang racket
+(define atom?
+  (lambda (x)
+    (and (not (pair? x)) (not (null? x)))))
+
+(define (not tree)
+  (cond ((null? tree) (print #t))
+        ((eq? tree '#t) (print #f))
+        ((eq? tree '#f) (print #t))
+        ((eq? tree '~) (print #f))
+        (else (not (cadr tree)))) ; recursively check the second element in the tree
+  )
+
+(define (extra exp)
+  (cond ((not (pair? exp)) exp)
+        ((and (pair? exp) (null? (cdr exp))) (extra (car exp)))
+        ((and (pair? exp) (pair? (car exp)) (null? (cdr (car exp))))) (extra (car exp))
+        ((and (pair? exp) (null? (cdr (cdr exp))))) (extra (cadr exp))
+        (else (cons (extra (car exp))
+                    (extra (cdr exp))))))
+
+
+(define (member? x list)
+  (if (null? list) #f                       
+      (if (equal? x (car list)) #t
+          (if (and (list? (car list)) (member? x (car list))) #t (member? x (cdr list))))))               
+
+(define (sublist list)
+  (cond ((and (pair? list) (pair? (car list)) (null? (cdr list))) #t)
+        ((and (pair? list) (null? (cdr list))) #f)
+        (else #f)))
+
+(define (print x)
+  (displayln x) x)
+
+(define boolCalc
+  (letrec ((splitFunct
+            (lambda (t symbol list1)
+              (cond ((null? t) (list (reverse list1) '()))
+                    ((eq? (car t) symbol)(list (reverse list1) (cdr t)))
+                    (else (splitFunct (cdr t) symbol (cons (car t) list1)))))))
+    (lambda (tree)
+      (cond
+        ;((null?  (displayln 'start)) '())
+
+        ;((null?  tree) '())
+        ((null?  (print tree)) 'Hello)
+        
+        ((atom? tree) tree)
+        
+        
+        ((member? 'V tree)(or (boolCalc(car(car(splitFunct tree 'V '())))) (boolCalc(caadr(splitFunct tree 'V '())))))
+        ((null?  (print 'passedOR)))
+        
+        ((member? '& tree)(and (boolCalc(car(car(splitFunct tree '& '())))) (boolCalc(caadr(splitFunct tree '& '())))))
+        ((null?  (print 'passedAND)))
+        
+        ;((member? '~ tree) (not tree))
+        ((null?  (print 'passednull)))
+        
+        ((sublist tree) (extra tree))
+        ((null?  (print 'passedSUBLIST)))
+        
+        ((and (not (member? '#t tree)) (member? '#f tree)) #f)
+        ((and (not (member? '#f tree)) (member? '#t tree)) #t) ;only true
+        ((member? '#t tree) #t)
+        ;((null?  (print 'pass)))
+        (else (display "invalid"))
+              ))))
+
+
+
+;1
+;(boolCalc '(#t)) ;works
+
+;2
+;(boolCalc '(~ #t)) ;does not work
+
+;3
+;(boolCalc '(#t V #f)) ;works
+
+;4
+;(boolCalc '(((((((#f)))))))) ;works
+
+;5
+;(boolCalc '(((((((#t)))))) & #f)) ;works
+
+;6
+;(boolCalc '(#f V (#f & #t))) ;works
+
+;7
+;(boolCalc '(#t V (#t & #f) & (#t V #f))) ;works
+
+;8
+;(boolCalc '(#f V (#t & #f) V #t)) ;does not work
+
+;9
+;(boolCalc '(#f & (~ #f))) ;does not work
+
+;10
+;(boolCalc '(((~ #t) V #t & (#f & (~ #f))) & #t & (~ (#t V #f)))) ;does not work
+
+
+;(boolCalc '(((~ #t) V #f))) ;does not work
+
+;11
+;(boolCalc '(#f V #t & #t & #f)) ;does not work
+
+;12
+;(boolCalc '((~ #t) V (~ #f) & #f)) ;does not work
+
+;13
+;(boolCalc '((#f) & (#t) V (#f) & (~f))) ;works
+
+;14
+;(boolCalc '((((~ ((((#t V #f))))) & ((~ #t)))))) ;does not work
+
+;15
+;(boolCalc '(((~ #t) V #t V (#f & (~ #f))) & #t & (~ (#t V #f)))) ;does not work
+
+;16
+;(boolCalc '(#f & #t)) ;works
+
+;17
+;(boolCalc '(#t & #t & (#t & #f))) ;does not work
+
+;18
+;(boolCalc '(#t & (#t & #t))) ;works
+
+;19
+;(boolCalc '(#t & (#t & #f) & (#f & #t))) ;works
+
+;20
+;(boolCalc '((#t V #f) & #t)) ;works
+
+;21
+;(boolCalc '((#t V #f) & #t & #f)) ;does not work
+
+;22
+;(boolCalc '((#f V #f) & (#t V #t))) ;works
+
+;23
+;(boolCalc '((#t V #f) & (#t V #t) V #t)) ;works
+
+;24
+;(boolCalc '(#f V #f)) ;works
+
+;25
+;(boolCalc '(#f V #f & (#t & #f))) ; does not work
+
+;26
+;(boolCalc '(#f V (#t & #f))) ;works
+
+;27
+;(boolCalc '(#t V (#t & #f) & (#f & #t))) ;works ;double works
+
+;28
+;(boolCalc '((#f V #f) V #f)) ;works ;double works;
+
+;29
+;(boolCalc '((#f V #f) V #t & #f)) ;does not work for all test cases
+
+;30
+;(boolCalc '((#t V #f) V (#f V #f))) ;works ;double works
+
+;31
+;(boolCalc '((#t V #f) V (#f V #f) V #f)) ;works ;double works
