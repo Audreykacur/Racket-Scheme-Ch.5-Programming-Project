@@ -3,13 +3,14 @@
   (lambda (x)
     (and (not (pair? x)) (not (null? x)))))
 
-(define (not tree)
-  (cond ((null? tree) (print #t))
-        ((eq? tree '#t) (print #f))
-        ((eq? tree '#f) (print #t))
-        ((eq? tree '~) (print #f))
-        (else (not (cadr tree)))) ; recursively check the second element in the tree
-  )
+(define not?
+  (lambda (t)
+   (cond
+   ((null? t) t)
+   ((eq? (car t) '~)(cond
+
+                     ((boolean? (cadr t)) (print(not(cadr t))) (not(cadr t)) )
+                      (else (not (boolCalc (cdr t) ) )))))))
 
 (define (extra exp)
   (cond ((not (pair? exp)) exp)
@@ -48,14 +49,13 @@
         
         ((atom? tree) tree)
         
-        
         ((member? 'V tree)(or (boolCalc(car(car(splitFunct tree 'V '())))) (boolCalc(caadr(splitFunct tree 'V '())))))
         ((null?  (print 'passedOR)))
         
         ((member? '& tree)(and (boolCalc(car(car(splitFunct tree '& '())))) (boolCalc(caadr(splitFunct tree '& '())))))
         ((null?  (print 'passedAND)))
         
-        ;((member? '~ tree) (not tree))
+        ((member? '~ tree) (not? tree))
         ((null?  (print 'passednull)))
         
         ((sublist tree) (extra tree))
